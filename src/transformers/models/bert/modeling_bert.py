@@ -333,7 +333,7 @@ class BertSelfAttention(nn.Module):
             else:
                 position_ids_l = torch.arange(query_length, dtype=torch.long, device=hidden_states.device).view(-1, 1)
             position_ids_r = torch.arange(key_length, dtype=torch.long, device=hidden_states.device).view(1, -1)
-            distance = position_ids_l - position_ids_r
+            distance = position_ids_l - position_ids_r # query序列位置索引 - key序列位置索引
 
             positional_embedding = self.distance_embedding(distance + self.max_position_embeddings - 1)
             positional_embedding = positional_embedding.to(dtype=query_layer.dtype)  # fp16 compatibility
@@ -973,7 +973,7 @@ class BertModel(BertPreTrainedModel):
         if attention_mask is None:
             attention_mask = torch.ones(((batch_size, seq_length + past_key_values_length)), device=device)
 
-        if token_type_ids is None:
+        if token_type_ids is None: # 用于区分两个句子（标记当前token属于哪个句子）
             if hasattr(self.embeddings, "token_type_ids"):
                 buffered_token_type_ids = self.embeddings.token_type_ids[:, :seq_length]
                 buffered_token_type_ids_expanded = buffered_token_type_ids.expand(batch_size, seq_length)
