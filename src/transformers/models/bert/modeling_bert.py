@@ -1263,7 +1263,8 @@ class BertLMHeadModel(BertPreTrainedModel):
             cross_attentions=outputs.cross_attentions,
         )
 
-    def prepare_inputs_for_generation(
+    # 在生成阶段动态更新decoder的输入
+    def prepare_inputs_for_generation( 
         self, input_ids, past_key_values=None, attention_mask=None, use_cache=True, **model_kwargs
     ):
         input_shape = input_ids.shape
