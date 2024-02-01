@@ -75,7 +75,7 @@ class ViTEmbeddings(nn.Module):
         self.mask_token = nn.Parameter(torch.zeros(1, 1, config.hidden_size)) if use_mask_token else None
         self.patch_embeddings = ViTPatchEmbeddings(config)
         num_patches = self.patch_embeddings.num_patches
-        self.position_embeddings = nn.Parameter(torch.randn(1, num_patches + 1, config.hidden_size))
+        self.position_embeddings = nn.Parameter(torch.randn(1, num_patches + 1, config.hidden_size)) # +1 for the [CLS] token
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
         self.config = config
 
@@ -581,7 +581,7 @@ class ViTModel(ViTPreTrainedModel):
             output_hidden_states=output_hidden_states,
             return_dict=return_dict,
         )
-        sequence_output = encoder_outputs[0]
+        sequence_output = encoder_outputs[0] # (bs, seq_len, dim) last_hidden_state
         sequence_output = self.layernorm(sequence_output)
         pooled_output = self.pooler(sequence_output) if self.pooler is not None else None
 
@@ -606,7 +606,7 @@ class ViTPooler(nn.Module):
     def forward(self, hidden_states):
         # We "pool" the model by simply taking the hidden state corresponding
         # to the first token.
-        first_token_tensor = hidden_states[:, 0]
+        first_token_tensor = hidden_states[:, 0] # 只取[CLS]的输出
         pooled_output = self.dense(first_token_tensor)
         pooled_output = self.activation(pooled_output)
         return pooled_output
@@ -633,7 +633,7 @@ class ViTForMaskedImageModeling(ViTPreTrainedModel):
         self.decoder = nn.Sequential(
             nn.Conv2d(
                 in_channels=config.hidden_size,
-                out_channels=config.encoder_stride**2 * config.num_channels,
+                out_channels=config.encoder_stride**2 * config.num_channels, # channel * patch*patch
                 kernel_size=1,
             ),
             nn.PixelShuffle(config.encoder_stride),
