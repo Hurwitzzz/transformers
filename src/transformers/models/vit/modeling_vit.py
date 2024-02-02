@@ -705,13 +705,13 @@ class ViTForMaskedImageModeling(ViTPreTrainedModel):
         sequence_output = outputs[0]
 
         # Reshape to (batch_size, num_channels, height, width)
-        sequence_output = sequence_output[:, 1:]
-        batch_size, sequence_length, num_channels = sequence_output.shape
+        sequence_output = sequence_output[:, 1:] # remove [CLS]
+        batch_size, sequence_length, num_channels = sequence_output.shape # num_channels = hidden_size，为了输入decoder
         height = width = math.floor(sequence_length**0.5)
         sequence_output = sequence_output.permute(0, 2, 1).reshape(batch_size, num_channels, height, width)
 
         # Reconstruct pixel values
-        reconstructed_pixel_values = self.decoder(sequence_output)
+        reconstructed_pixel_values = self.decoder(sequence_output) # output.shape=(batch_size, 3*patch*patch, height, width)
 
         masked_im_loss = None
         if bool_masked_pos is not None:
@@ -802,7 +802,7 @@ class ViTForImageClassification(ViTPreTrainedModel):
 
         sequence_output = outputs[0]
 
-        logits = self.classifier(sequence_output[:, 0, :])
+        logits = self.classifier(sequence_output[:, 0, :]) # 只取[CLS]的输出
 
         loss = None
         if labels is not None:
